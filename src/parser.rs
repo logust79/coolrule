@@ -59,8 +59,8 @@ fn space<'a>() -> Parser<'a, u8, ()> {
 }
 
 fn property_path<'a>() -> Parser<'a, u8, Vec<Vec<u8>>> {
-    let ascii = one_of(b"_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
-    list(ascii.repeat(1..), sym(b'.'))
+    let ascii = one_of(b"._abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+    list(ascii.repeat(1..), sym(b'/'))
 }
 
 fn lparen<'a>() -> Parser<'a, u8, ()> {
@@ -170,9 +170,8 @@ fn boolean_condition<'a>() -> Parser<'a, u8, BooleanCondition> {
     space()
         * ((property_val() + binary_op() + property_val())
             .map(|((lval, bin_op), rval)| BooleanCondition::Comparison(lval, bin_op, rval))
-            | (lparen() * call(boolean_expression) - rparen()).map(|boolean_expression| {
-                BooleanCondition::Group(Box::new(boolean_expression))
-            }))
+            | (lparen() * call(boolean_expression) - rparen())
+                .map(|boolean_expression| BooleanCondition::Group(Box::new(boolean_expression))))
         - space()
 }
 
@@ -208,8 +207,8 @@ fn test_parse() {
         "(1=1 or 2=2) and (3 = 3)",
         "foo = \"bar\" AND baz > 10",
         "foo = \"bar\" OR baz > 10",
-        "foo.bar = \"bar\"",
-        "foo.bar isnot none",
+        "foo/bar = \"bar\"",
+        "foo/bar isnot none",
         "x in (5, 6, 7)",
         "(3, 4) not∩ (3, 4, 5)",
     ];

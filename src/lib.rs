@@ -182,22 +182,22 @@ fn test_bool_rule_test_suite() {
             true,
         ),
         (
-            "foo.bar = \"bar\"",
+            "foo/bar = \"bar\"",
             HashMap::from([(vec!["foo", "bar"], Value::Str("bar".to_string()))]),
             true,
         ),
         (
-            "foo.bar isnot none",
+            "foo/bar isnot none",
             HashMap::from([(vec!["foo", "bar"], Value::Number(4.0))]),
             true,
         ),
         (
-            "foo.bar is none",
+            "foo/bar is none",
             HashMap::from([(vec!["foo", "bar"], Value::None)]),
             true,
         ),
         (
-            "foo.bar is none",
+            "foo/bar is none",
             HashMap::from([(vec!["foo", "bar"], Value::None)]),
             true,
         ),

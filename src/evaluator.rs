@@ -390,12 +390,12 @@ fn test_eval() {
             false,
         ),
         (
-            "foo.bar = \"bar\"",
+            "foo/bar = \"bar\"",
             vec![("foo.bar", SimpleValue::Str("bar".to_owned()))],
             true,
         ),
         (
-            "foo.bar.zoo isnot none and true is true",
+            "foo/bar/zoo isnot none and true is true",
             vec![("foo.bar.zoo", SimpleValue::Number(4.0))],
             true,
         ),
