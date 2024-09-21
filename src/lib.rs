@@ -20,12 +20,12 @@
 //! Creating and testing an expression with context:
 //!
 //! ```
-//! use coolrule::{Value};
+//! use serde_json::Value;
 //! use std::collections::HashMap;
 //!
 //! let expr = coolrule::new("x == 5").unwrap();
 //! let mut context = HashMap::new();
-//! context.insert(vec!["x"], Value::Number(5.0));
+//! context.insert(vec!["x"], Value::from(5.0));
 //! let result = expr.test_with_context(&context).unwrap(); // true
 //! ```
 //!
@@ -35,20 +35,13 @@ mod parser;
 
 use evaluator::EvalError;
 use parser::{BooleanExpression, SimpleValue};
+use serde_json::Value;
 use std::collections::HashMap;
 
 #[derive(Debug)]
 pub enum CoolRuleError {
     EvalError(EvalError),
     ParseError(pom::Error),
-}
-
-/// Represents possible values that can be used in boolean expressions.
-pub enum Value {
-    Number(f64),
-    Str(String),
-    Bool(bool),
-    None,
 }
 
 /// Represents a parsed and processed boolean expression.
@@ -105,10 +98,11 @@ impl CoolRule {
             ctx.insert(
                 k.to_vec(),
                 match v {
-                    Value::Number(n) => SimpleValue::Number(*n),
-                    Value::Str(s) => SimpleValue::Str(s.clone()),
+                    Value::Number(n) => SimpleValue::Number(n.as_f64().unwrap()),
+                    Value::String(s) => SimpleValue::Str(s.clone()),
                     Value::Bool(b) => SimpleValue::Bool(*b),
-                    Value::None => SimpleValue::None,
+                    Value::Null => SimpleValue::None,
+                    _ => panic!("Value has to be number/string/bool/null!",),
                 },
             );
         });
@@ -160,99 +154,99 @@ fn test_bool_rule_test_suite() {
         (
             "foo = \"bar\" AND baz > 10",
             HashMap::from([
-                (vec!["foo"], Value::Str("bar".to_string())),
-                (vec!["baz"], Value::Number(20.0)),
+                (vec!["foo"], Value::String("bar".to_string())),
+                (vec!["baz"], Value::from(20.0)),
             ]),
             true,
         ),
         (
             "foo = \"bar\" AND baz > 10",
             HashMap::from([
-                (vec!["foo"], Value::Str("bar".to_string())),
-                (vec!["baz"], Value::Number(9.0)),
+                (vec!["foo"], Value::String("bar".to_string())),
+                (vec!["baz"], Value::from(9.0)),
             ]),
             false,
         ),
         (
             "foo = \"bar\" AND (\"a\" = \"b\" OR baz > 10)",
             HashMap::from([
-                (vec!["foo"], Value::Str("bar".to_string())),
-                (vec!["baz"], Value::Number(11.0)),
+                (vec!["foo"], Value::String("bar".to_string())),
+                (vec!["baz"], Value::from(11.0)),
             ]),
             true,
         ),
         (
             "foo.bar = \"bar\"",
-            HashMap::from([(vec!["foo", "bar"], Value::Str("bar".to_string()))]),
+            HashMap::from([(vec!["foo", "bar"], Value::String("bar".to_string()))]),
             true,
         ),
         (
             "foo.bar isnot none",
-            HashMap::from([(vec!["foo", "bar"], Value::Number(4.0))]),
+            HashMap::from([(vec!["foo", "bar"], Value::from(4.0))]),
             true,
         ),
         (
             "foo.bar is none",
-            HashMap::from([(vec!["foo", "bar"], Value::None)]),
+            HashMap::from([(vec!["foo", "bar"], Value::Null)]),
             true,
         ),
         (
             "foo.bar is none",
-            HashMap::from([(vec!["foo", "bar"], Value::None)]),
+            HashMap::from([(vec!["foo", "bar"], Value::Null)]),
             true,
         ),
         ("1=1 and 2 in (1, true)", HashMap::new(), false),
         (
             "x in (5, 6, 7)",
-            HashMap::from([(vec!["x"], Value::Number(5.0))]),
+            HashMap::from([(vec!["x"], Value::from(5.0))]),
             true,
         ),
         (
             "x in (5, 6, 7)",
-            HashMap::from([(vec!["x"], Value::Number(8.0))]),
+            HashMap::from([(vec!["x"], Value::from(8.0))]),
             false,
         ),
         (
             "x in (5, 6, 7, y)",
             HashMap::from([
-                (vec!["x"], Value::Number(99.0)),
-                (vec!["y"], Value::Number(99.0)),
+                (vec!["x"], Value::from(99.0)),
+                (vec!["y"], Value::from(99.0)),
             ]),
             true,
         ),
         (
             "x ∈ (5, 6, 7)",
-            HashMap::from([(vec!["x"], Value::Number(5.0))]),
+            HashMap::from([(vec!["x"], Value::from(5.0))]),
             true,
         ),
         (
             "x ∈ (5, 6, 7)",
-            HashMap::from([(vec!["x"], Value::Number(8.0))]),
+            HashMap::from([(vec!["x"], Value::from(8.0))]),
             false,
         ),
         (
             "x ∈ (5, 6, 7, y)",
             HashMap::from([
-                (vec!["x"], Value::Number(99.0)),
-                (vec!["y"], Value::Number(99.0)),
+                (vec!["x"], Value::from(99.0)),
+                (vec!["y"], Value::from(99.0)),
             ]),
             true,
         ),
         (
             "x ∉ (5, 6, 7)",
-            HashMap::from([(vec!["x"], Value::Number(5.0))]),
+            HashMap::from([(vec!["x"], Value::from(5.0))]),
             false,
         ),
         (
             "x ∉ (5, 6, 7)",
-            HashMap::from([(vec!["x"], Value::Number(8.0))]),
+            HashMap::from([(vec!["x"], Value::from(8.0))]),
             true,
         ),
         (
             "x ∉ (5, 6, 7, y)",
             HashMap::from([
-                (vec!["x"], Value::Number(99.0)),
-                (vec!["y"], Value::Number(99.0)),
+                (vec!["x"], Value::from(99.0)),
+                (vec!["y"], Value::from(99.0)),
             ]),
             false,
         ),
